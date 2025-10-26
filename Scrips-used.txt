@@ -1,0 +1,15 @@
+git init
+
+npm init
+
+npm i typescript --save-dev
+
+npm i @types/node --save-dev
+
+npx tsc --init
+
+npm i tsx --save-dev
+
+npm i express
+
+npm i @types/express --save-dev
