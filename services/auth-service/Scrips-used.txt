@@ -1,0 +1,47 @@
+git init
+
+npm init
+
+npm i typescript --save-dev
+
+npm i @types/node --save-dev
+
+npx tsc --init
+
+npm i tsx --save-dev
+
+npm i express
+
+npm i @types/express --save-dev
+
+npm i eslint --save-dev
+
+npx eslint --init 
+
+npm i cors
+
+npm i --save-dev @types/cors
+
+docker-compose up 
+
+npm i prisma --save-dev
+
+npm i @prisma/client
+
+//npx prisma init 
+
+npx prisma migrate dev --name "init"
+
+npx prisma studio
+
+npm i bcrypt
+
+npm i -D @types/bcrypt
+
+npm i jsonwebtoken
+
+npm i --save-dev @types/jsonwebtoken
+
+npm i cookie-parser
+
+npm i --save-dev @types/cookie-parser
