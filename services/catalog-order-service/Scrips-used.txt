@@ -1,0 +1,47 @@
+npm init -y
+
+npm i typescript @types/node -D
+
+npm i tsx -D
+
+npx tsc --init
+
+npm i express
+
+npm i @types/express -D
+
+npm i eslint -D
+
+npx eslint --init 
+
+config:
+- y
+- javaScript
+- to check syntax and find problems 
+- javaScript modules (import/export)
+- None of these
+- yes
+- Node 
+- javaScript
+- yes
+- npm
+
+npm i cors
+
+npm i --save-dev @types/cors
+
+docker-compose up 
+
+npm i prisma -D
+
+npm i @prisma/client
+
+npx prisma init
+
+npx prisma migrate dev --name "init"
+
+npx prisma studio
+
+npm i jsonwebtoken
+
+npm i --save-dev @types/jsonwebtoken

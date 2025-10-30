@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken"
 export interface jwtPayLoadCustom {
   sub: string
   email?: string 
+  role: string
 }
 
 const JWT_SECRET = process.env.JWT_SECRET ?? ""

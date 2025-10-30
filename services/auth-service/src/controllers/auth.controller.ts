@@ -28,7 +28,6 @@ const setRefreshCookie = (res: Response, token: string) =>{
 }
 
 
-
 export const registerUser = async(req: Request, res: Response) => {
   try {
     const {name, email, password} = req.body
@@ -41,10 +40,10 @@ export const registerUser = async(req: Request, res: Response) => {
 
     const user = await prisma.user.create({
       data: { name, email, password: hashedPassword },
-      select: { id: true, name: true, email: true, createdAt: true },
+      select: { id: true, name: true, email: true, role:true , createdAt: true },
     })
 
-    const accessToken = signJwt({sub: String(user.id), email: user.email})
+    const accessToken = signJwt({sub: String(user.id), email: user.email, role: user.role})
     const refreshToken = makeRefreshToken()
 
     await createSession({
@@ -75,7 +74,7 @@ export const loginUser = async (req: Request, res: Response) => {
     
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true, password: true, name: true, createdAt: true}
+      select: { id: true, email: true, password: true, name: true, role: true, createdAt: true}
     })
 
     if (!user) return res.status(401).json({ message: "Invalid credentials"})
@@ -83,7 +82,7 @@ export const loginUser = async (req: Request, res: Response) => {
     const passwordMatches = await bcrypt.compare(password, user.password)
     if (!passwordMatches) return res.status(401).json({message: "Invalid credentials"})
 
-    const accessToken = signJwt({ sub: String(user.id), email: user.email })
+    const accessToken = signJwt({ sub: String(user.id), email: user.email, role: user.role })
     const refreshToken = makeRefreshToken()
 
     await createSession({
@@ -117,7 +116,25 @@ export const refreshToken = async (req: Request, res: Response) =>{
       return res.status(401).json({ message: "Invalid or revoked refresh token" })
     }
 
-    const accessToken = signJwt({ sub: String(session.userId)})
+    const user = await prisma.user.findUnique({
+      where: {id : session.userId},
+      select: {id: true, email: true, role:true}
+    })
+
+    if (!user){
+      await prisma.session.update({
+        where: { id: session.id },
+        data: { revoked: true }
+      }).catch(()=> {})
+      return res.status(401).json({ message: "Invalid session" })
+    }
+
+    // const accessToken = signJwt({ sub: String(session.userId)})
+    const accessToken = signJwt({
+      sub: String(user.id),
+      email: user.email ?? undefined,
+      role: user.role
+    })
 
     const newRefreshToken = makeRefreshToken()
     await prisma.session.update({
@@ -179,8 +196,8 @@ export const getMe = async (req: Request, res: Response) =>{
 
 // test conection whit data base 
 export const testConection = async(req: Request, res: Response) => {
-   console.log("stast conection database...");
    const r = await prisma.$queryRaw`SELECT NOW()`;
+   
    res.send(r)
    console.log(r);
 }

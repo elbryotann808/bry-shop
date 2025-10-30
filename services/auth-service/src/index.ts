@@ -15,7 +15,7 @@ app.use(cookieParser())
 app.use("/api/auth", authRouter)
 
 app.listen (PORT, ()=>{
-  console.log(`server running on port ${PORT}`);
+  console.log(`Server auth-service running on port ${PORT}`);
 })
 
 

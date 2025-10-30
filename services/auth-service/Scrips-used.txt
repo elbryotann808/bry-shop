@@ -28,11 +28,13 @@ npm i prisma --save-dev
 
 npm i @prisma/client
 
-//npx prisma init 
+npx prisma init 
 
 npx prisma migrate dev --name "init"
 
 npx prisma studio
+
+
 
 npm i bcrypt
 
