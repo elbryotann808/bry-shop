@@ -1,0 +1,432 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Auth API (documentación)",
+    "version": "1.0.0",
+    "description": "Documentación OpenAPI para las rutas de autenticación (register, login, logout, refresh, me, conection)."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/auth",
+      "description": "Server local"
+    }
+  ],
+  "tags": [
+    { "name": "Auth", "description": "Rutas de registro, login, refresh, logout, me y healthcheck" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "refreshCookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "refreshToken"
+      }
+    },
+    "parameters": {
+      "AuthorizationHeader": {
+        "name": "Authorization",
+        "in": "header",
+        "description": "Bearer <accessToken> (JWT). Uso: Authorization: Bearer eyJ...",
+        "required": false,
+        "schema": { "type": "string", "example": "Bearer eyJhbGciOiJIUzI1Ni..." }
+      },
+      "RefreshTokenCookie": {
+        "name": "refreshToken",
+        "in": "cookie",
+        "description": "Refresh token almacenado en cookie HttpOnly (opcional).",
+        "required": false,
+        "schema": { "type": "string", "example": "hex_refresh_token_example" }
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "María Díaz" },
+          "email": { "type": "string", "format": "email", "example": "maria@example.com" },
+          "role": { "type": "string", "example": "user" },
+          "createdAt": { "type": "string", "format": "date-time", "example": "2025-10-30T12:00:00Z" }
+        },
+        "required": ["id", "name", "email", "role"]
+      },
+      "UserSafe": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "María Díaz" },
+          "email": { "type": "string", "format": "email", "example": "maria@example.com" },
+          "createdAt": { "type": "string", "format": "date-time", "example": "2025-10-30T12:00:00Z" }
+        }
+      },
+      "ErrorResponseRequiredData":{
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "All fields are required" }
+        }
+      },
+      "ErrorResponseUserEmailAlreadyRegistered":{
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Email already registered" }
+        }
+      },
+      "Session": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 10 },
+          "userId": { "type": "integer", "example": 1 },
+          "refreshToken": { "type": "string", "example": "hex_refresh_token_example" },
+          "revoked": { "type": "boolean", "example": false },
+          "userAgent": { "type": "string", "example": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+          "ip": { "type": "string", "example": "::1" },
+          "createdAt": { "type": "string", "format": "date-time", "example": "2025-10-30T12:00:00Z" }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["name", "email", "password"],
+        "properties": {
+          "name": { "type": "string", "example": "María Díaz" },
+          "email": { "type": "string", "format": "email", "example": "maria@example.com" },
+          "password": { "type": "string", "example": "S3cretP@ss" }
+        }
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "properties": {
+          "user": { "$ref": "#/components/schemas/User" },
+          "accessToken": { "type": "string", "example": "eyJhbGciOiJIUzI1Ni..." }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email", "example": "maria@example.com" },
+          "password": { "type": "string", "example": "S3cretP@ss" }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Logged in" },
+          "user": { "$ref": "#/components/schemas/UserSafe" },
+          "accessToken": { "type": "string", "example": "eyJhbGciOiJIUzI1Ni..." }
+        }
+      },
+      "ErrorResponseInvalidBody": {
+        "types": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Invalid request body" }
+        }
+      },
+      "RefreshRequestBody": {
+        "type": "object",
+        "properties": {
+          "refreshToken": { "type": "string", "example": "hex_refresh_token_example" }
+        }
+      },
+      "RefreshResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string", "example": "eyJhbGciOiJIUzI1Ni..." }
+        }
+      },
+      "ErrorResponseMissingToken":{
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Missing refresh token" }
+        }
+      },
+      "ErrorResponseInvalidToken":{
+        "type": "object", 
+        "properties": {
+          "message": { "type": "string", "example": "Invalid or revoked refresh token" }
+        }
+      },
+      "ErrorResponseInvalidSession":{
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Invalid session" }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Logged out" }
+        }
+      },
+      "ErrorResponseUnauthorized":{
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Unauthorized" }
+        }
+      },
+      "ErrorResponseUserNotFound":{
+        "type": "object",
+        "properties":{
+          "message": { "type": "string", "example": "User not found" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Invalid credentials" }
+        }
+      },
+      "TestConnectionResponse": {
+        "type": "array",
+        "items": { "type": "object", "additionalProperties": true },
+        "example": [{ "now": "2025-10-30T15:00:00.000Z" }]
+      },
+      "ErrorResponseServer": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Internal server error" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Registrar usuario",
+        "description": "Registra un usuario nuevo, crea sesión con refresh token (cookie HttpOnly) y devuelve accessToken. Respuestas: 201 creado, 400 campos faltantes, 409 email registrado.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" },
+              "example": {
+                "name": "María Díaz",
+                "email": "maria@example.com",
+                "password": "S3cretP@ss"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuario creado. Se establece cookie HttpOnly `refreshToken` (Set-Cookie).",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Cookie HttpOnly con refresh token. Ej: refreshToken=<hex>; Path=/; HttpOnly; Max-Age=<ms>",
+                "schema": { "type": "string" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegisterResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Campos faltantes o formato inválido",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseRequiredData" } } }
+          },
+          "409": {
+            "description": "Email ya registrado",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseUserEmailAlreadyRegistered" } } }
+          },
+          "500": {
+            "description": "Error interno",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseServer" } } }
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Iniciar sesión (login)",
+        "description": "Valida credenciales, crea sesión, guarda refresh token en cookie HttpOnly y devuelve accessToken + datos públicos del usuario.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" },
+              "example": { "email": "maria@example.com", "password": "S3cretP@ss" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Autenticación correcta. Cookie `refreshToken` establecida (Set-Cookie).",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Cookie HttpOnly con refresh token.",
+                "schema": { "type": "string" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LoginResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Campos faltantes o formato inválido",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseRequiredData" } } }
+          },
+          "401": {
+            "description": "Credenciales inválidas",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+          },
+          "422": {
+            "description": "Bad request (body inválido)",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseInvalidBody" } } }
+          },
+          "500": {
+            "description": "Error interno",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseServer" } } }
+          }
+        }
+      }
+    },
+    "/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Rotar / obtener nuevo access token usando refresh token",
+        "description": "Acepta refresh token por cookie `refreshToken`, por body `{ refreshToken }` o por Authorization header como `Bearer <token>`. Valida la sesión; si válida, rota el refresh token almacenado en DB y actualiza la cookie. Devuelve nuevo accessToken.",
+        "parameters": [
+          { "$ref": "#/components/parameters/AuthorizationHeader" },
+          { "$ref": "#/components/parameters/RefreshTokenCookie" }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RefreshRequestBody" },
+              "example": { "refreshToken": "hex_refresh_token_example" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Devuelve nuevo accessToken y rota refresh token (Set-Cookie actualizado).",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Nueva cookie HttpOnly con refresh token (valor rotado).",
+                "schema": { "type": "string" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RefreshResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "El cliente no realizo el envio del refresh token en cookies, body ni headers",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseMissingToken" } } }
+          },
+          "401": {
+            "description": "El refresh token es inválido o ha sido revocado",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseInvalidToken" } } }
+          },
+          "404":{
+            "description": "La sesión asociada al refresh token no corresponde a ningún usuario válido",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseInvalidSession" } }}
+          },
+          "500": {
+            "description": "Error interno",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseServer" } } }
+          }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Cerrar sesión (logout)",
+        "description": "Revoca la sesión asociada al refresh token (si se proporciona por cookie/body/header), limpia la cookie `refreshToken` (Set-Cookie con Max-Age=0 o empty).",
+        "parameters": [
+          { "$ref": "#/components/parameters/AuthorizationHeader" },
+          { "$ref": "#/components/parameters/RefreshTokenCookie" }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "properties": { "refreshToken": { "type": "string" } } },
+              "example": { "refreshToken": "hex_refresh_token_example" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sesión cerrada y cookie `refreshToken` eliminada (Set-Cookie de borrado).",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Cookie borrada: refreshToken=; Path=/; Max-Age=0; HttpOnly",
+                "schema": { "type": "string" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseServer" } } }
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Obtener datos del usuario autenticado",
+        "description": "Requiere header Authorization: Bearer <accessToken>. Devuelve el usuario asociado al token.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Usuario autenticado",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/User" } }
+            }
+          },
+          "401": {
+            "description": "Token faltante o inválido",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseUnauthorized" } } }
+          },
+          "404": {
+            "description": "Usuario no encontrado",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseUserNotFound" } } }
+          },
+          "500": {
+            "description": "Error interno",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseServer" } } }
+          }
+        }
+      }
+    },
+    "/conection": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Healthcheck / Test de conexión a la DB",
+        "description": "Ejecuta `SELECT NOW()` y devuelve el resultado bruto. Útil para healthchecks.",
+        "responses": {
+          "200": {
+            "description": "Resultado de la consulta `SELECT NOW()`",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TestConnectionResponse" } } }
+          },
+          "500": {
+            "description": "Error al consultar la base de datos",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponseServer" } } }
+          }
+        }
+      }
+    }
+  },
+  "security": []
+}

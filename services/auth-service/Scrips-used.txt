@@ -47,3 +47,9 @@ npm i --save-dev @types/jsonwebtoken
 npm i cookie-parser
 
 npm i --save-dev @types/cookie-parser
+
+npm i swagger-ui-express
+
+npm i -D @types/swagger-ui-express
+
+npm i -D vitest supertest @types/supertest

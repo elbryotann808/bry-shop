@@ -16,7 +16,6 @@ router.post("/logout" , logoutUser)
 
 router.get("/me", requireAuth ,getMe)
 
-
 router.get("/conection", testConection)
 
 export default router

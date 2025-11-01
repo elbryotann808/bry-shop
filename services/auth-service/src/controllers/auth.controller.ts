@@ -59,18 +59,18 @@ export const registerUser = async(req: Request, res: Response) => {
 
   } catch (error) {
     console.log(error);
-    return res.status(500).json({message: 'internal server error'})
+    return res.status(500).json({message: 'Internal server error'})
   }
 }
 
 export const loginUser = async (req: Request, res: Response) => {
   try {
     if (!req.body || typeof req.body !=="object") {
-      return res.status(400).json({ mesage: "Invalid request body"})
+      return res.status(422).json({ mesage: "Invalid request body"})
     }
   
     const { email, password } = req.body as {email?: string; password?: string}
-    if (!email || !password) return res.status(400).json({message: "Missing fields"}) 
+    if (!email || !password) return res.status(400).json({message: "All fields are required"}) 
     
     const user = await prisma.user.findUnique({
       where: { email },
@@ -95,10 +95,10 @@ export const loginUser = async (req: Request, res: Response) => {
     setRefreshCookie(res, refreshToken)
  
     const userSafe = { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt }
-    return res.json({ message: "Logged in", user: userSafe, accessToken })
+    return res.status(200).json({ message: "Logged in", user: userSafe, accessToken })
   } catch (error) {
       console.error(error);
-      return res.status(500).json({ message: "internal server error" });
+      return res.status(500).json({ message: "Internal server error" });
   }
 } 
 
@@ -109,7 +109,7 @@ export const refreshToken = async (req: Request, res: Response) =>{
     (req.body && req.body.refreshToken) ||
     (req.headers.authorization && String(req.headers.authorization).split(" ")[1]) 
 
-    if (!refreshToken) return res.status(401).json({ mesage: "Missing refresh token" })
+    if (!refreshToken) return res.status(400).json({ mesage: "Missing refresh token" })
 
     const session = await findsessionByToken(String(refreshToken))
     if (!session || session.revoked ) {
@@ -126,7 +126,7 @@ export const refreshToken = async (req: Request, res: Response) =>{
         where: { id: session.id },
         data: { revoked: true }
       }).catch(()=> {})
-      return res.status(401).json({ message: "Invalid session" })
+      return res.status(404).json({ message: "Invalid session" })
     }
 
     // const accessToken = signJwt({ sub: String(session.userId)})
@@ -143,7 +143,7 @@ export const refreshToken = async (req: Request, res: Response) =>{
     })
 
     setRefreshCookie(res, newRefreshToken)
-    return res.json({ accessToken })
+    return res.status(200).json({ accessToken })
   } catch (error) {
     console.error(error)
     return res.status(500).json({ message: "Internal server error"})
@@ -169,7 +169,7 @@ export const  logoutUser = async (req: Request, res: Response) =>{
     return res.status(200).json({ message: "Logged out"})
   } catch (error) {
     console.error("logout error", error);
-    return res.status(500).json({ message: "internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
 
@@ -186,7 +186,7 @@ export const getMe = async (req: Request, res: Response) =>{
     
     if (!user) return res.status(404).json({ message: "User not found"}) 
 
-    return res.json(user)
+    return res.status(200).json(user)
   } catch (error) {
     console.error("getMe error", error)
     return res.status(500).json({ message: "Internal server error" })
@@ -196,8 +196,13 @@ export const getMe = async (req: Request, res: Response) =>{
 
 // test conection whit data base 
 export const testConection = async(req: Request, res: Response) => {
-   const r = await prisma.$queryRaw`SELECT NOW()`;
-   
-   res.send(r)
-   console.log(r);
+  try {
+    const date = await prisma.$queryRaw`SELECT NOW()`;
+    
+    res.status(200).send(date)
+    console.log(date);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ mesagge: "Internal server error" })
+  }
 }
