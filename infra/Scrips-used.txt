@@ -1,0 +1,10 @@
+// raiz del proyecto
+chmod +x infra/start-all.sh
+
+docker compose -p authsvc -f services/auth-service/docker-compose.yml down
+docker compose -p catalogsvc -f services/catalog-order-service/docker-compose.yml down
+docker network rm staging_net
+
+
+curl -i http://localhost:3101/health
+curl -i http://localhost:3102/health

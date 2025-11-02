@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  auth:
+    build:
+      context: ../services/auth-service
+      dockerfile: Dockerfile
+    env_file: ./envs/auth.staging.env
+    ports:
+      - "3101:3000"
+    depends_on:
+      - db_service_name_here
+    networks:
+      - staging_net
+    restart: on-failure
+
+  catalog_order:
+    build:
+      context: ../services/catalog-order-service
+      dockerfile: Dockerfile
+    env_file: ./envs/catalog_order.staging.env
+    ports:
+      - "3102:3000"
+    depends_on:
+      - db_bry-shop
+    networks:
+      - staging_net
+    restart: on-failure
+
+networks:
+  staging_net:
+    external: false
